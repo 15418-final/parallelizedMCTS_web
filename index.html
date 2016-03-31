@@ -25,7 +25,7 @@
 <h3>
 <a id="summary" class="anchor" href="#summary" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Summary</h3>
 
-<p>This automatic page generator is the easiest way to create beautiful pages for all of your projects. Author your page content here <a href="https://guides.github.com/features/mastering-markdown/">using GitHub Flavored Markdown</a>, select a template crafted by a designer, and publish. After your page is generated, you can check out the new <code>gh-pages</code> branch locally. If you’re using GitHub Desktop, simply sync your repository and you’ll see the new branch.</p>
+<p>We are going to explore serveral Monte Carlo Tree Search(MCTS) parallelization approaches and parallelize MCTS on GPU using CUDA. Finally we will compare the performance between different parallelization methods on Go.</p>
 
 <h3>
 <a id="background" class="anchor" href="#background" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Background</h3>
@@ -35,7 +35,13 @@
 <h3>
 <a id="challenge" class="anchor" href="#challenge" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Challenge</h3>
 
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
+<p>Tree searching algorithms are hard to parallelize, especially when GPU is considered. The main challenge of this project will be how to utilize GPU to parallelize MCTS in an efficient way. There are several problems we need to handle:</p>
+
+<ul>
+<li>CPU, GPU communication. Since the cost of communication between CPU and GPU is expensive, this brings up the problem of how to minimize the data movement.</li>
+<li>Work assignment. The simulation step in MCTS will be random, which will result in imbalanced work.</li>
+<li>Concurrence. Parallelization among single node will have concurrent problem when comes into back-propagation step. We need to solve concurrency problem while not sacrifice the performance.</li>
+</ul>
 
 <h3>
 <a id="deliverables" class="anchor" href="#deliverables" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Deliverables</h3>
@@ -45,10 +51,18 @@
 <h3>
 <a id="platform" class="anchor" href="#platform" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Platform</h3>
 
-<p>Having trouble with Pages? Check out our <a href="https://help.github.com/pages">documentation</a> or <a href="https://github.com/contact">contact support</a> and we’ll help you sort it out.</p>
+<ul>
+<li>Cluster: Since our main goal is to parallelize MCTS on GPU, so latedays cluster is a good for us.</li>
+<li>Language: C++. High performance, object-oriented (game design for Go), CUDA compile-able.</li>
+</ul>
 
 <h3>
 <a id="schedule" class="anchor" href="#schedule" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Schedule</h3>
+
+<h3>
+<a id="reference" class="anchor" href="#reference" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Reference</h3>
+
+<p><em>[1] Rocki, Kamil, and Reiji Suda. "Parallel Monte Carlo Tree Search on GPU." SCAI. 2011.</em></p>
 
       <footer class="site-footer">
         <span class="site-footer-owner"><a href="https://github.com/15440-final/parallelizedMCTS_web">Parallelized Monte Carlo Tree Search</a> is maintained by <a href="https://github.com/15440-final">15440-final</a>.</span>
