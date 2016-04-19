@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Parallelized Monte Carlo Tree Search for Go by 15440-final</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Parallelized Monte Carlo Tree Search for Go</h1>
+      <h2 class="project-tagline">Qiankun Zhuang, Yepeng Yin, 15-618 Final Project</h2>
+      <a href="https://github.com/15440-final/parallelizedMCTS_web" class="btn">View on GitHub</a>
+      <a href="https://github.com/15440-final/parallelizedMCTS_web/checkpoint" class="btn">Checkpoint</a>
+      <a href="https://github.com/15440-final/parallelizedMCTS_web/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <h2>
+<a id="proposal" class="anchor" href="#proposal" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Proposal</h2>
+
+<h3>
+<a id="summary" class="anchor" href="#summary" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Summary</h3>
+
+<p>We are going to explore serveral Monte Carlo Tree Search(MCTS) parallelization approaches and parallelize MCTS on GPU using CUDA. Finally we will compare the performance between different parallelization methods on Go.</p>
+
+<h3>
+<a id="background" class="anchor" href="#background" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Background</h3>
+
+<p>Go is one of the oldest board games originated in ancient China. Due to its large board and more alternatives for each move, this game has been considered very challenging for computer. </p>
+
+<p>In the very recent game in March 2016, AlphaGo developed by Google beat Lee Sedol 9-dan for the first time. AlphaGo utilized Monte Carlo Search Tree and Value Network and Policy Network implemented using deep learning technology. In this project, we are going to explore the possibility of paralleling Monte Carlo Search Tree.</p>
+
+<p>Monte Carlo Tree Search is a variant of Monte Carlo method, which are methods based on repeated random sampling. In the area of chess, it means for each state of board, make many different random moves until the end, and use the win-loss ratio to help determine the best next move. But since the search space of Go is too large, traditional Monte Carlo method cannot give a precise answer. Monte Carlo Tree Search can help with this problem.</p>
+
+<h3>
+<a id="challenge" class="anchor" href="#challenge" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Challenge</h3>
+
+<p>Tree searching algorithms are hard to parallelize, especially when GPU is considered. The main challenge of this project will be how to utilize GPU to parallelize MCTS in an efficient way. There are several problems we need to handle:</p>
+
+<ul>
+<li>CPU, GPU communication. Since the cost of communication between CPU and GPU is expensive, this brings up the problem of how to minimize the data movement.</li>
+<li>Work assignment. The simulation step in MCTS will be random, which will result in imbalanced work.</li>
+<li>Concurrence. Parallelization among single node will have concurrent problem when comes into back-propagation step. We need to solve concurrency problem while not sacrifice the performance.</li>
+</ul>
+
+<h3>
+<a id="deliverables" class="anchor" href="#deliverables" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Deliverables</h3>
+
+<ul>
+<li>Go AI powered by parallel Monte Carlo Tree Search on CPU,GPU and hybrid of CPU and GPU.</li>
+<li>Graphs showing the speedup with sequential MCTS implementation as benchmark.</li>
+<li>Our AI should be able to compete with other AI online. Graphs showing the win ratio with different implementations will be made.</li>
+<li>If have more time, we will implement UI for user to play against our AI.</li>
+</ul>
+
+<h3>
+<a id="platform" class="anchor" href="#platform" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Platform</h3>
+
+<ul>
+<li>Cluster: Since our main goal is to parallelize MCTS on GPU, so ghc or latedays cluster is a good choice for us.</li>
+<li>Language: C++. High performance, object-oriented (game design for Go), CUDA compile-able.</li>
+</ul>
+
+<table>
+<thead>
+<tr>
+<th>Date:</th>
+<th>TODO:</th>
+<th>Result:</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>April 1 - Apri 7</td>
+<td>Proposal; Implement sequential MCTS on CPU; Implement parallel MCTS on CPU</td>
+<td></td>
+</tr>
+<tr>
+<td>April 8 - April 14</td>
+<td>Continue parallel MCTS on CPU; Start implement MCTS on GPU with leaf-parallel scheme</td>
+<td></td>
+</tr>
+<tr>
+<td>April 15 - April 21</td>
+<td>Implement MCTS on GPU with block-parallel scheme</td>
+<td></td>
+</tr>
+<tr>
+<td>April 22 - April 28</td>
+<td>Run experiments and make graphs of speedup; Compete with other AI and make graphs of win ratio</td>
+<td></td>
+</tr>
+<tr>
+<td>April 29 - May 5</td>
+<td>Final Tuning; Prepare for presentation</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+<h3>
+<a id="reference" class="anchor" href="#reference" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Reference</h3>
+
+<p><em>[1] Rocki, Kamil, and Reiji Suda. "Parallel Monte Carlo Tree Search on GPU." SCAI. 2011.</em></p>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/15440-final/parallelizedMCTS_web">Parallelized Monte Carlo Tree Search for Go</a> is maintained by <a href="https://github.com/15440-final">15440-final</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
