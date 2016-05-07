@@ -33,8 +33,8 @@ performance improvemnt in terms of number of simulated games, and win ratios bet
 <h3>
 <a id="background" class="anchor" href="#summary" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Background</h3>
 <p>
-  In this project we'll try to parallelize Monte Carlo Tree Search algoritm. This algorithm includes 4 phases: Selection, Expansion,
-  Simulation and Backpropagation. 
+  In this project we'll try to parallelize Monte Carlo Tree Search algoritm. The basic data structure we use here is tree. 
+  The tree will grow from one single node, with the following 4 oeprations: Selection, Expansion, Simulation and Backpropagation. 
 </p>
 <p>
   Selection: If a node has been visited and searched before, we use some evaluation function to determine 
@@ -55,7 +55,20 @@ performance improvemnt in terms of number of simulated games, and win ratios bet
   its ancestors to update their records. Then we can find the best next move from the root node through its children's win/loss ratio.
 </p>
 <p>
-  
+  Each node represents a state of the board. To generate a next move, we take the current board state as the root node. With the 
+  4 operations described above, we grow the tree and selects the most promising children of root as next move. 
+</p>
+<p>
+  As we know, tree traversal is very hard to parallelize, as there are many dependencies when you go down the tree. However, for 
+  Monte Carlo Search Tree, most of the time is spent on Simulation phase on leaf nodes, and these simulation are totally independent 
+  from each other. Therefore, there's a potential that we can make simulation phase parallel, so that in a fixed time we can do more 
+  simulations for each state of board. Each thread can have a local copy of a board, and they can play randomly on their own board,
+  and then report the result. 
+</p>
+<p>
+  However, even though this is naturally parallizable, it's not good for SIMD. Because different threads play the game totally randomly, 
+  they will have very different state of board, leading to lots of divergence. We found this problem when we try to run our program
+  on a warp of threads on GPU.
 </p>
 
 <h3>
