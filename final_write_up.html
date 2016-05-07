@@ -73,6 +73,30 @@ performance improvemnt in terms of number of simulated games, and win ratios bet
 
 <h3>
 <a id="approach" class="anchor" href="#summary" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Approach</h3>
+<p>
+  To implement, for CPU parallel version we use OpenMP, and for GPU parallel we use Cuda. Target machine is Latedays.
+</p>
+<p>
+  At the very begining, we start our project based on Fuego, an open source Go project, to make use of the Go logic they implemented.
+  We tried to understand the code base, interfaces it provides, and tries to parallelize. However, we gradually realize that 
+  Fuego is not very friendly to our modification:
+  1. Fuego provides a very complete and complicated Go logic, and the data structure they use to represent a board state is too large.
+  If we parallelize and do tons of simulation at the same time, it will consume too much memory. We tried solving this problem by
+  using a sequence of play to represent a state of board, instead of their own board data structure, and saves a lot of memory.
+  2. We wanted to integrate cuda and GPU to Fuego, however, we have to rewrite most of Fuego's code to device code so that it can be 
+  run in cuda device. This will be too much work. To avoid the trouble, we implemented a basic version of Go as cuda device code so 
+  that we can do Go simulation on GPU.
+</p>
+
+<p>
+  Implement on CPU:
+</p>
+<p>
+  Implement on GPU:
+  1. Leaf-parallel MCTS:
+  2. Block-level MCTS:
+</p>
+
 
 <h3>
 <a id="result" class="anchor" href="#summary" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Result</h3>
