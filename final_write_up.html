@@ -32,6 +32,31 @@ performance improvemnt in terms of number of simulated games, and win ratios bet
 
 <h3>
 <a id="background" class="anchor" href="#summary" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Background</h3>
+<p>
+  In this project we'll try to parallelize Monte Carlo Tree Search algoritm. This algorithm includes 4 phases: Selection, Expansion,
+  Simulation and Backpropagation. 
+</p>
+<p>
+  Selection: If a node has been visited and searched before, we use some evaluation function to determine 
+  which child node we should use to walk down the tree. This is a multi-arm bandit problem and here we use Upper Confidence bound
+  applied to Trees (UCT) as the evaluation function, to balance exploration and exploition. 
+</p>
+<p>
+  Expansion: If a node has not been searched before, we will try to expand the node by finding all possible next moves, 
+  as the children of the node, which are also the leaf nodes of the tree. 
+</p>
+<p>
+  Simulation: For the leaf nodes that are just expanded, we'll play lots of games on the node using random choices, and record
+  the number of simulations and wins. The more simulations we do on a single node, the better performance we'll get. 
+  Because all simulations are played independently, this is the main part we're going to parallelize.
+</p>
+<p>
+  Backpropagation: For all the simulations we run on the leaf nodes, the number of wins and simulations will be propagated back to 
+  its ancestors to update their records. Then we can find the best next move from the root node through its children's win/loss ratio.
+</p>
+<p>
+  
+</p>
 
 <h3>
 <a id="approach" class="anchor" href="#summary" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Approach</h3>
@@ -44,7 +69,8 @@ performance improvemnt in terms of number of simulated games, and win ratios bet
 <a id="reference" class="anchor" href="#reference" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Reference</h3>
 
 <p><em>[1] Rocki, Kamil, and Reiji Suda. "Parallel Monte Carlo Tree Search on GPU." SCAI. 2011.</em></p>
-
+<p><em>[2] Jeff Bradberry, Introduction to Monte Carlo Tree Search, https://jeffbradberry.com/posts/2015/09/intro-to-monte-carlo-tree-search/</em></p>
+<p><em>[3] Guillaume M.J.-B Chaslot, "Parallel Monte Carlo Tree Search", Computers and Games: 6th International Conference</em></p> 
       <footer class="site-footer">
         <span class="site-footer-owner"><a href="https://github.com/15418-final/parallelizedMCTS_web">Parallelized Monte Carlo Tree Search for Go</a> is maintained by <a href="https://github.com/15418-final">15418-final</a>.</span>
 
