@@ -80,9 +80,12 @@ performance improvemnt in terms of number of simulated games, and win ratios bet
   At the very begining, we start our project based on Fuego, an open source Go project, to make use of the Go logic they implemented.
   We tried to understand the code base, interfaces it provides, and tries to parallelize. However, we gradually realize that 
   Fuego is not very friendly to our modification:
+<p>
   1. Fuego provides a very complete and complicated Go logic, and the data structure they use to represent a board state is too large.
   If we parallelize and do tons of simulation at the same time, it will consume too much memory. We tried solving this problem by
   using a sequence of play to represent a state of board, instead of their own board data structure, and saves a lot of memory.
+</p>
+<p>
   2. We wanted to integrate cuda and GPU to Fuego, however, we have to rewrite most of Fuego's code to device code so that it can be 
   run in cuda device. This will be too much work. To avoid the trouble, we implemented a basic version of Go as cuda device code so 
   that we can do Go simulation on GPU.
