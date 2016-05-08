@@ -55,6 +55,10 @@ performance improvemnt in terms of number of simulated games, and win ratios bet
   its ancestors to update their records. Then we can find the best next move from the root node through its children's win/loss ratio.
 </p>
 <p>
+  The picture folloing may help explain the 4 phases.
+  <img src="http://15418-final.github.io/parallelizedMCTS_web/mcts.png" alt="MCTS" style="width:304px;height:228px;">
+</p>
+<p>
   Each node represents a state of the board. To generate a next move, we take the current board state as the root node. With the 
   4 operations described above, we grow the tree and selects the most promising children of root as next move. 
 </p>
@@ -91,13 +95,39 @@ performance improvemnt in terms of number of simulated games, and win ratios bet
   that we can do Go simulation on GPU.
 </p>
 
-<p>
+<h4>
   Implement on CPU:
+</h4>
+<p>
+  Leaf-parallel MCTS - On CPU, we used OpenMP to parallelize the Simulation phase of Monte Carlo Tree Search. As mentioned above, this phase starts
+  on the leaf nodes of the tree, and plays randomly on board independently. In OpenMP, we generate a board in each threads private
+  memory so that each thread can play on their own board to avoid conflicts. If sufficient time is given, the tree can become
+  very large because of Go's large expoential search space. At first, we used Fuego's implementation of Board in each node, however,
+  when tree becomes large, program consumes huge memory. Then we changed our tree implementation to that, each node doesn't store
+  a board, instead, it stores the sequence how it reaches this current state. 
+</p>
+<h4>
+  Implement on GPU:
+</h4>
+<p>
+  Implementation on GPU is more complicated. For CPU version, we utilized Go logic implemented by Fuego. However, it's 
+  hard to transplant Fuego's code to Cuda device code. After evaluating the workload, we decided to implement our own Go logic
+  in device code. Our own Go logic is a simplified version of Go and is much more lightweight, which is good for parallelizing 
+  simulation phase.
 </p>
 <p>
-  Implement on GPU:
-  1. Leaf-parallel MCTS:
-  2. Block-level MCTS:
+  Leaf-parallel MCTS - We move the simulation phase to GPU so that we can make use of more GPU threads. GPU threads is slower
+  than CPU threads (~100 times slower) due to lower clock frequency. But we can still manage to achieve higher number of simulations
+  by using more threads. After some testing, we found that for threads from same warp will be executed almost sequentially. The reason
+  is a warp of threads is running in SIMD and uses same set of ALU units. These threads are making random plays, leading to 
+  very different state of board. This will result in lots of divergence and degenerate to sequential execution. Therefore, we 
+  can only increase thread number by increasing the number of blocks and use only one thread on each block. Note that we need to
+  record the number of winning games and total simulations, we use two arraris of size Thread_num and each thread i only writes to
+  array[i] to avoid the use of atomic operation. Then we use exclusive scan to sum up the numbers in the array. 
+</p>
+</p>
+  Block-level MCTS - In leaf-parllel implementation, we parallelize the simulations on a single leaf node. In block-level MCTS,
+  we do simulations on multiple leaf nodes in parallel. Each block is responsible for the simulations of a leaf node.
 </p>
 
 
