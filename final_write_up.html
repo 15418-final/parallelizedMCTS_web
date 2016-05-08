@@ -115,7 +115,8 @@ performance improvemnt in terms of number of simulated games, and win ratios bet
   Implementation on GPU is more complicated. For CPU version, we utilized Go logic implemented by Fuego. However, it's 
   hard to transplant Fuego's code to Cuda device code. After evaluating the workload, we decided to implement our own Go logic
   in device code. Our own Go logic is a simplified version of Go and is much more lightweight, which is good for parallelizing 
-  simulation phase.
+  simulation phase. Smaller data structure repsenting the board is also beneficial when we want to place board data in shared 
+  memory to increase the speed for simulating. Some read-only parameters of mcts is stored in constant memory.
 </p>
 <p>
   Leaf-parallel MCTS - We move the simulation phase to GPU so that we can make use of more GPU threads. GPU threads is slower
