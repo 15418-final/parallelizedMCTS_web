@@ -132,7 +132,10 @@ performance improvemnt in terms of number of simulated games, and win ratios bet
   Block-level MCTS - In leaf-parllel implementation, we parallelize the simulations on a single leaf node. In block-level MCTS,
   we do simulations on multiple leaf nodes in parallel. Each block is responsible for the simulations of a leaf node.
 </p>
-
+<p>
+  Finally, when the GPU is doing simulation works, CPU is idle to wait for GPU. This is a good opportunity to utilize CPU. Based on this observation, we hybrid GPU and CPU to further improve our performance. 
+  As shown in result, the hybrid method fully utilized CPU power when GPU is doing work.
+</p>
 
 <h3>
 <a id="result" class="anchor" href="#summary" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Result</h3>
