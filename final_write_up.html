@@ -118,6 +118,9 @@ performance improvemnt in terms of number of simulated games, and win ratios bet
   simulation phase. Smaller data structure repsenting the board is also beneficial when we want to place board data in shared 
   memory to increase the speed for simulating. Some read-only parameters of mcts is stored in constant memory.
 </p>
+<h5>
+  Leaf-parallel
+</h5>
 <p>
   Leaf-parallel MCTS - We move the simulation phase to GPU so that we can make use of more GPU threads. GPU threads is slower
   than CPU threads (~100 times slower) due to lower clock frequency. But we can still manage to achieve higher number of simulations
@@ -128,10 +131,16 @@ performance improvemnt in terms of number of simulated games, and win ratios bet
   record the number of winning games and total simulations, we use two arraris of size Thread_num and each thread i only writes to
   array[i] to avoid the use of atomic operation. Then we use exclusive scan to sum up the numbers in the array. 
 </p>
+<h5>
+Block-parallel
+</h5>
 </p>
   Block-level MCTS - In leaf-parllel implementation, we parallelize the simulations on a single leaf node. In block-level MCTS,
   we do simulations on multiple leaf nodes in parallel. Each block is responsible for the simulations of a leaf node.
 </p>
+<h5>
+Hybrid GPU & CPU
+</h5>
 <p>
   Finally, when the GPU is doing simulation works, CPU is idle to wait for GPU. This is a good opportunity to utilize CPU. Based on this observation, we hybrid GPU and CPU to further improve our performance. 
   As shown in result, the hybrid method fully utilized CPU power when GPU is doing work.
@@ -139,7 +148,14 @@ performance improvemnt in terms of number of simulated games, and win ratios bet
 
 <h3>
 <a id="result" class="anchor" href="#summary" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Result</h3>
-
+<h4>
+ GPU leaf-parallel
+</h4>
+<p>
+  This experiment is conucted on latedays clutser NVIDIA TitanX GPU, which has 3072 cores in total. The total running time for each execution is 120 seconds.
+  The comparsion is between different cores and how many simulations the MCTS can run given the time constraint. We run this experiment on two differnt board
+  size, 9X9 an 11X11.
+</p>
 
 <h3>
 <a id="reference" class="anchor" href="#reference" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Reference</h3>
