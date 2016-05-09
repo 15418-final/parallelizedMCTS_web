@@ -148,6 +148,15 @@ Hybrid GPU & CPU
 
 <h3>
 <a id="result" class="anchor" href="#summary" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Result</h3>
+<p> We run several experiments to show the performance between serialization, CPU parallelism and GPU parallelism. The results show
+that our GPU parallel MCTS is 1.7X faster than the CPU version on the best setting for both methods. And our Hybrid GPU & CPU method is
+2.1X faster then CPU on the best setting.</p>
+<p>  We found two facts in the experiments: 1. single thread CPU is 40X - 200X faster than single thread GPU based on the board size
+and implementation. The reason is that CPU core is more sophisticated than GPU core, higher clock frequency, instruction pre-fetching, branch prediction, etc. 
+2. The simulation for GO is compute-bound, and each step in simulation is random, so the divergence is very high. 
+This means MCTS simulation actually is not suitable for GPU, the high divergence and compute-bound characteristics means multithreading on one core is not useful. 
+The experiments showed multithreading on GPU will turn to serialization. So the following experiments using the 1 thread per block setting.
+</p>
 <h4>
  GPU leaf-parallel
 </h4>
@@ -159,7 +168,10 @@ Hybrid GPU & CPU
 <p>
   <img src="http://15418-final.github.io/parallelizedMCTS_web/gpu.png">
 </p>
-
+<p>
+  As we can see from the graph, the simulations double as the cores double under 1024 cores for both board size. The increment in simulations beyond 1024 cores
+  doesn't double as the cores, we found the that the synchronization overhead between cores increasing fast when the core number beyond 1024. In the experiment, each core is given 1000 ms time constraint, however, the total kernel function execution time is over 2000ms and increasing as the cores number going up. As mentioned above, the experiment use 1 thread per block. Cuda will first form blocks into Streaming Multiprocessors (SM) and SM will actually running kernels. 
+</p>
 <h3>
 <a id="reference" class="anchor" href="#reference" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Reference</h3>
 
