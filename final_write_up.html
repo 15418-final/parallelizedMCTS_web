@@ -158,6 +158,23 @@ This means MCTS simulation actually is not suitable for GPU, the high divergence
 The experiments showed multithreading on GPU will turn to serialization. So the following experiments using the 1 thread per block setting.
 </p>
 <h4>
+  CPU leaf-parallel
+</h4>
+<p>
+  The following figure describes the speedup we get on 9x9 Go board and 11x11 Go board, and the machine we used is two 
+  6-core Xeon e5-2620 v3 processors. For 9x9 board, we got almost leaner speed up for using 1 to 16 cores. This is reasonable
+  because the our algorithm is very computation heavy and most of the time is spent on simulation.  Increasing number of 
+  cores should increase number of simulations almost linearly. The slow speedup increases from 16 to 128 should be due to 
+  multi-threading and latency hiding. Each board data structure (9x9) is ~1KB so boards from all threads should be able to 
+  hold in cache. The effect of latency hiding is not obvious.
+</p>
+<p>
+  Program with 11x11 board is significantly slower because one simulation typically takes longer to finish.
+</p>
+<p>
+  <img src="http://15418-final.github.io/parallelizedMCTS_web/cpu_speedup.png" alt="MCTS" style="width:304px;height:228px;">
+</p>
+<h4>
  GPU leaf-parallel
 </h4>
 <p>
