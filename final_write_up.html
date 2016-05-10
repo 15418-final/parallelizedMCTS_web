@@ -131,12 +131,38 @@ performance improvemnt in terms of number of simulated games, and win ratios bet
   record the number of winning games and total simulations, we use two arraris of size Thread_num and each thread i only writes to
   array[i] to avoid the use of atomic operation. Then we use exclusive scan to sum up the numbers in the array. 
 </p>
+<p>
+  The first version of code is nearly identical to CPU version, just changing the Go play functions to device code.
+  The performance is extremely slow compare, 10 steps in CUDA will take ~20,000ms [9x9 board, same setting for following time 
+  measurement], CPU can finish a whole game in ~30 ms. We find out that it is very expensive to malloc and free on device. 
+  So, instead of dynamic allocate memory during BFS, we allocate all need resources in advance, and repeat use them. In this way, 
+  CUDA can finish whole game in ~2,000 – 3,000 ms. This is a factor of 10 improvements. But CUDA version is still 100X slower than 
+  CPU version. Finally, we found that every pointer in CUDA will be stored in global memory, one of our data structure “point” is 
+  stored as double pointer, which means we need 3 accesses to global memory to get the actual data. To handle this issue, we change
+  all unnecessary pointers to object and this version can finish whole game under ~1,000 ms in average.
+</p>
+<p></p>
+Another improvement is use time constraint for kernel function. Since in MCTS, simulation is done completely random, so the runtime 
+for each thread is unpredictable. The runtime kernel function is always bounded by the longest game, which around ~3,000 - ~4,000 ms, 
+while average game time is under 1,000ms. In order to fully utilize idle thread, we put a time constraint for each kernel thread 
+(1,000 ms for our setting), each thread will keep running until no time left. For game longer than time constraint, it will cutoff and 
+the simulation is counted by a fraction of number of steps already moved. This optimization will improve the total simulations by
+factor of 1.8X. (for 60s running on 9X9 board with 2048 threads, time constraint version can run 58762 simulations while naïve 
+version can run 32768 simulations.) 
+</p>
+<p>
+  <img src="http://15418-final.github.io/parallelizedMCTS_web/leaf-parallel.png">
+</p>
 <h5>
 Block-parallel
 </h5>
 </p>
   Block-level MCTS - In leaf-parllel implementation, we parallelize the simulations on a single leaf node. In block-level MCTS,
-  we do simulations on multiple leaf nodes in parallel. Each block is responsible for the simulations of a leaf node.
+  we do simulations on multiple leaf nodes in parallel. Each block is responsible for the simulations of a leaf node. The reason to 
+  do block-level MCTS is to reduce the probability to converage to a local optimum.
+</p>
+<p>
+  <img src="http://15418-final.github.io/parallelizedMCTS_web/block-parallel.png">
 </p>
 <h5>
 Hybrid GPU & CPU
@@ -145,7 +171,9 @@ Hybrid GPU & CPU
   Finally, when the GPU is doing simulation works, CPU is idle to wait for GPU. This is a good opportunity to utilize CPU. Based on this observation, we hybrid GPU and CPU to further improve our performance. 
   As shown in result, the hybrid method fully utilized CPU power when GPU is doing work.
 </p>
-
+<p>
+  <img src="http://15418-final.github.io/parallelizedMCTS_web/hybrid-plot.png">
+</p>
 <h3>
 <a id="result" class="anchor" href="#summary" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Result</h3>
 <p> We run several experiments to show the performance between serialization, CPU parallelism and GPU parallelism. The results show
