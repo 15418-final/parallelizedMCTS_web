@@ -118,21 +118,8 @@ performance improvemnt in terms of number of simulated games, and win ratios bet
   simulation phase. Smaller data structure repsenting the board is also beneficial when we want to place board data in shared 
   memory to increase the speed for simulating. Some read-only parameters of mcts is stored in constant memory.
 </p>
-<h5>
-  Leaf-parallel
-</h5>
 <p>
-  Leaf-parallel MCTS - We move the simulation phase to GPU so that we can make use of more GPU threads. GPU threads is slower
-  than CPU threads (~100 times slower) due to lower clock frequency. But we can still manage to achieve higher number of simulations
-  by using more threads. After some testing, we found that for threads from same warp will be executed almost sequentially. The reason
-  is a warp of threads is running in SIMD and uses same set of ALU units. These threads are making random plays, leading to 
-  very different state of board. This will result in lots of divergence and degenerate to sequential execution. Therefore, we 
-  can only increase thread number by increasing the number of blocks and use only one thread on each block. Note that we need to
-  record the number of winning games and total simulations, we use two arraris of size Thread_num and each thread i only writes to
-  array[i] to avoid the use of atomic operation. Then we use exclusive scan to sum up the numbers in the array. 
-</p>
-<p>
-  The first version of code is nearly identical to CPU version, just changing the Go play functions to device code.
+  The first version of the code is nearly identical to CPU version, just changing the Go play functions to device code.
   The performance is extremely slow compare, 10 steps in CUDA will take ~20,000ms [9x9 board, same setting for following time 
   measurement], CPU can finish a whole game in ~30 ms. We find out that it is very expensive to malloc and free on device. 
   So, instead of dynamic allocate memory during BFS, we allocate all need resources in advance, and repeat use them. In this way, 
@@ -149,6 +136,19 @@ while average game time is under 1,000ms. In order to fully utilize idle thread,
 the simulation is counted by a fraction of number of steps already moved. This optimization will improve the total simulations by
 factor of 1.8X. (for 60s running on 9X9 board with 2048 threads, time constraint version can run 58762 simulations while naïve 
 version can run 32768 simulations.) 
+</p>
+<h5>
+  Leaf-parallel
+</h5>
+<p>
+  Leaf-parallel MCTS - We move the simulation phase to GPU so that we can make use of more GPU threads. GPU threads is slower
+  than CPU threads (~100 times slower) due to lower clock frequency. But we can still manage to achieve higher number of simulations
+  by using more threads. After some testing, we found that for threads from same warp will be executed almost sequentially. The reason
+  is a warp of threads is running in SIMD and uses same set of ALU units. These threads are making random plays, leading to 
+  very different state of board. This will result in lots of divergence and degenerate to sequential execution. Therefore, we 
+  can only increase thread number by increasing the number of blocks and use only one thread on each block. Note that we need to
+  record the number of winning games and total simulations, we use two arraris of size Thread_num and each thread i only writes to
+  array[i] to avoid the use of atomic operation. Then we use exclusive scan to sum up the numbers in the array. 
 </p>
 <p>
   <img src="http://15418-final.github.io/parallelizedMCTS_web/leaf-parallel.png">
@@ -200,22 +200,72 @@ The experiments showed multithreading on GPU will turn to serialization. So the 
   Program with 11x11 board is significantly slower because one simulation typically takes longer to finish.
 </p>
 <p>
-  <img src="http://15418-final.github.io/parallelizedMCTS_web/cpu_speedup.png" alt="MCTS" style="width:800px;height:600px;">
+  <img src="http://15418-final.github.io/parallelizedMCTS_web/cpu.png">
 </p>
 <h4>
  GPU leaf-parallel
 </h4>
 <p>
  This experiment is conducted on latedays cluster NVIDIA TitanX GPU, which has 3072 cores in total. The total running time for each execution is 120 seconds.
-  The comparison is between different cores and how many simulations the MCTS can run given the time constraint. We run this experiment on two different board
-  sizes, 9X9 and 11X11.
+  The comparison is between different threads and how many simulations the MCTS can run given the time constraint. We run this experiment on two different board
+  sizes, 9X9 and 11X11. Time time contraint for 9X9 is 1,000 ms and 11X11 is 4,000 ms.
 </p>
 <p>
   <img src="http://15418-final.github.io/parallelizedMCTS_web/gpu.png">
 </p>
 <p>
-  As we can see from the graph, the simulations double as the cores double under 1024 cores for both board size. The increment in simulations beyond 1024 cores
-  doesn't double as the cores, we found the that the synchronization overhead between cores increasing fast when the core number beyond 1024. In the experiment, each core is given 1000 ms time constraint, however, the total kernel function execution time is over 2000ms and increasing as the cores number going up. As mentioned above, the experiment use 1 thread per block. Cuda will first form blocks into Streaming Multiprocessors (SM) and SM will actually running kernels. 
+ As we can see from the graph, the simulations increasing linearly as the threads increasing. When threads beyond 1024, 
+ we found the that the synchronization overhead between threads increasing fast. In the experiment, each core is given 1000 ms 
+ time constraint, however, the total kernel function execution time is over 2000 ms and increasing as the threads number going up. 
+ As mentioned above, the experiment use 1 thread per block, so the actual synchronization is between cores.  Another limitation is
+ the number of cores on the GPU. Since the simulation is compute-bound operation, so the number of cores decides the maximum threads 
+ can be executed in parallel.  
+</p>
+
+<h4>
+ Hybrid GPU & CPU
+</h4>
+<p>
+</p>
+<p>
+  <img src="http://15418-final.github.io/parallelizedMCTS_web/hybrid.png">
+</p>
+<p>
+  This experiment is running on the work node that has NVIDIA K40 GPU (2880 cores)
+and Xeon Phi 5 CPU (60 cores). The total running time for each execution is 120 seconds. For CPU simulation, we use 59 threads (fully utilize other 59 cores).
+The time constraint is 1,000ms for GPU kernel function and CPU threads. The board size is 9X9. NOTE: The NORMAL data run on NVIDIA TitanX GPU, which is powerful
+than K40.
+</p>
+<p>
+ We can see a clearly gap between two approaches, which is the benefit from utilize the idle CPU. Notice that when the number of threads reaching to 1024 threads, the gap becomes narrow. This is because the overhead of synchronization between different CUDA cores increasing, the actual CPU threads benefits decreasing. When threads number is 2048, the total running time for GPU kernel function is around 2,000 ms, while the time constraint for CPU threads in 1,000 ms, which means half of the time will waste for CPU. 
+ In general, hybrid method has better performance than GPU approach.
+</p>
+
+<h4>
+Comparison between different parallel approaches
+</h4>
+<p>
+  <img src="http://15418-final.github.io/parallelizedMCTS_web/comparsion.png">
+</p>
+<p>
+The data is from previous experiment. Our GPU approach achieves 1.5X speedup than CPU and the hybrid method achieves 1.9X speedup. 
+The main limitation of GPU approach for MCTS is mentioned before, MCTS simulation is compute-bound and has high divergence, 
+which means only 1/32 of the compute resources is utilized. In addition, for single core, GPU has lower performance than CPU core, 
+nearly around 40X – 200X depends on implementation and board size. 
+</p>
+
+<h4>
+Competition between different parallel approaches.
+</h4>
+<p>
+  The machine setup is the same as prevous experiment. Since we only have limited time, so totally played 10 games for each comparasion. For each game,
+  120 moves are made, each move has 20 seconds "thinking" time. The board size is 9X9.
+</p>
+<p>
+  <img src="http://15418-final.github.io/parallelizedMCTS_web/competition.png">
+</p>
+<p> We can see that GPU approach is clearly better than serialization approach.
+Since the board size is pretty small and games player is small, the game between CPU, GPU and Hybrid not shown big difference. 
 </p>
 <h3>
 <a id="reference" class="anchor" href="#reference" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Reference</h3>
@@ -228,7 +278,7 @@ The experiments showed multithreading on GPU will turn to serialization. So the 
 </h3>
 <p>Equal work was performed by both project members</p>
       <footer class="site-footer">
-        <span class="site-footer-owner"><a href="https://github.com/15418-final/parallelizedMCTS_web">Parallelized Monte Carlo Tree Search for Go</a> is maintained by <a href="https://github.com/15418-final">15418-final</a>.</span>
+        <span class="site-footer-owner"><a href="https://github.com/15618-final/parallelizedMCTS_web">Parallelized Monte Carlo Tree Search for Go</a> is maintained by <a href="https://github.com/15418-final">15418-final</a>.</span>
 
         <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
       </footer>
